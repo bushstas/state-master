@@ -25,7 +25,7 @@ const check = function(key) {
 	}
 }
 
-const savePrevProp = function(key, initial = false) {
+const savePrevProp = function(key) {
 	if (!this.newState) {
 		this.newState = {};
 	}
@@ -33,10 +33,15 @@ const savePrevProp = function(key, initial = false) {
 		this.newState.prevProps = this.prevProps;
 	}
 	this.newState.prevProps[key] = this.props[key];
-	if (!initial) {
-		this.changed = this.changed || {};
-		this.changed[key] = true;
-	}
+	this.changed = this.changed || {};
+	this.changed[key] = true;
+}
+
+const SUBSCRIBERS = {};
+let ID = 0;
+let CURRENT_ID = 0;
+const getNextId = function() {
+	return ID++;
 }
 
 export class StateMaster {
@@ -44,38 +49,39 @@ export class StateMaster {
 		this.propsList = propsList;
 	}
 
-	getInitialState = (props, state = null) => {
-		if (typeof this.propsList != 'string' && !(this.propsList instanceof Array)) {
-			return {};
-		}
-		if (state && state instanceof Object) {
-			this.newState = state;
-		} else {
-			this.newState = null;
-		}
-		this.props = props;
-		this.prevProps = {};
-		if (this.propsList instanceof Array) {
-			for (let i = 0; i < this.propsList.length; i++) {
-				savePrevProp.call(this, this.propsList[i], true);
-			}
-		} else if (typeof this.propsList == 'string') {
-			savePrevProp.call(this, this.propsList, true);
-		}
-		return this.newState;
+	subscribe(cmp) {
+		CURRENT_ID = getNextId();
+		SUBSCRIBERS[CURRENT_ID] = cmp;
 	}
 
-	getDerivedState = (props, state, callback) => {
-		if (typeof this.propsList != 'string' && !(this.propsList instanceof Array)) {
-			return null;
-		}
+	unsubscribe(cmp) {
+		const {uniqCmpID} = cmp.state;
+		SUBSCRIBERS[uniqCmpID] = null;
+		delete SUBSCRIBERS[uniqCmpID];
+	}
+
+	getDerivedState = (props, state, callback, parent) => {
 		this.props = props;
 		this.prevProps = state.prevProps || {};
 		this.newState = null;
 		this.changed = null;
+		if (!state || state.uniqCmpID == null) {
+			this.changed = {uniqCmpID: true};
+			this.newState = {uniqCmpID: CURRENT_ID};
+			this.id = CURRENT_ID;
+		} else {
+			this.id = state.uniqCmpID;
+		}
 		check.call(this, this.propsList);
-		if (this.changed && typeof callback == 'function') {
-			callback(props, this.prevProps, state);
+		let parentalState;
+		if (parent instanceof Function && parent.getDerivedStateFromProps instanceof Function) {
+			parentalState = parent.getDerivedStateFromProps(props, state);
+		}
+		if ((this.changed || parentalState) && typeof callback == 'function') {
+			callback(props, this.prevProps, state, SUBSCRIBERS[this.id]);
+			if (parentalState) {
+				this.merge(parentalState);
+			}
 			return this.newState;
 		}
 		return null;
@@ -89,7 +95,7 @@ export class StateMaster {
 		return this.changed && this.changed[key] && (value === undefined || this.newState.prevProps[key] === value);
 	}
 
-	isChangedAny = (keys) => {
+	isChangedAny = (keys = this.propsList) => {
 		if (this.changed) {
 			if (keys instanceof Array) {
 				for (let i = 0; i < keys.length; i++) {
@@ -104,7 +110,7 @@ export class StateMaster {
 		return false;
 	}
 
-	isChangedAll = (keys) => {
+	isChangedAll = (keys = this.propsList) => {
 		if (this.changed) {
 			if (keys instanceof Array) {
 				for (let i = 0; i < keys.length; i++) {
@@ -119,18 +125,28 @@ export class StateMaster {
 		return false;
 	}
 
-	add = (key, value) => {
+	add = (key, value = undefined) => {
+		if (value === undefined) {
+			value = this.props[key];
+		}
 		this.newState = modObject(key, value, this.newState);
 	}
 
 	merge = (obj) => {
 		if (this.newState == null) {
 			this.newState = obj;
-		} else {
-			this.newState = {
-				...this.newState,
-				...obj
-			};
+		} else if (obj instanceof Object) {
+			this.newState = this.newState || {};
+			for (let k in obj) {
+				if (k == 'prevProps') {
+					this.newState.prevProps = {
+						...obj[k],
+						...this.newState.prevProps
+					}
+ 				} else {
+					this.newState[k] = obj[k];
+				}
+			}
 		}
 	}
 
