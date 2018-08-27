@@ -35,9 +35,11 @@ class ContainerComponent extends Component {
         state,
 
         // the first initial call
+        // if (isInitial) { ... 
         isInitial,
 
-        // changed is true if one of props from PROPS_LIST was changed
+        // changed is true if one of props from the PROPS_LIST was changed
+        // if (changed) { ... 
         changed,
         
         // adds param "name" with given value to result state
@@ -46,7 +48,9 @@ class ContainerComponent extends Component {
         // add('name')
         add,
 
-        // addIfChanged('name') or addIfChanged('name', value) the same as "if (isChanged('name')) add('name') or add('name', value)"
+        // calls "add" method if given prop was changed somehow
+        // addIfChanged('name', value)
+        // addIfChanged('name')
         addIfChanged,
 
         // returns true if given prop was changed somehow
@@ -55,21 +59,32 @@ class ContainerComponent extends Component {
         // isChanged('name', value) 
         isChanged,
 
-        // returns true if some prop from list was changed
+        // returns true if some prop from the PROPS_LIST was changed
         // isChangedAny()
         // returns true if some prop from given arguments (prop names) was changed
         // isChangedAny('width', 'height')
         isChangedAny,
 
-        // returns true if all props from list were changed
+        // calls "add" method if some prop from the PROPS_LIST was changed
+        // addIfChangedAny('name', value)
+        // addIfChangedAny('name')
+        addIfChangedAny,
+
+        // returns true if all props from the PROPS_LIST were changed
         // isChangedAll()
         // returns true if all prop from given arguments (prop names) were changed
         // isChangedAll('width', 'height')
         isChangedAll,
 
-
-        addIfChangedAny,
+        // calls function with timeout
+        // the same as setTimeout(() => this.changeSomething(), 0)
+        // use to do some action after component updating
         call,
+
+        // returns result state or null
+        // it's somethind about debugging, put to the end
+        // console.log(get())
+        // {width: '200px'}
         get
       } = data;
 
