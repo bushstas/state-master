@@ -83,7 +83,7 @@ class ContainerComponent extends Component {
         call,
 
         // returns result state or null
-        // it's somethind about debugging, put to the end
+        // it's something about debugging, put to the end
         // console.log(get())
         // {width: '200px'}
         get
