@@ -1,66 +1,12 @@
-const modObject = (key, value, obj) => {
-	if (!obj || !(obj instanceof Object)) {
-		obj = {};
-	}
-	obj[key] = value;
-	return obj;
-}
-
-const check = function(key) {
-	if (typeof key == 'string') {
-		const isChanged = this.isPropChanged(key);
-		if (isChanged) {
-			savePrevProp.call(this, key);
-		}
-		return isChanged;
-	} else if (key instanceof Array) {
-		let isChanged = false;
-		for (let i = 0; i < key.length; i++) {
-			if (check.call(this, key[i])) {
-				savePrevProp.call(this, key[i]);
-				isChanged = true
-			}
-		}
-		return isChanged;
-	}
-}
-
-const savePrevProp = function(key) {
-	if (!this.newState) {
-		this.newState = {};
-	}
-	if (!this.newState.prevProps) {
-		this.newState.prevProps = this.prevProps;
-	}
-	this.newState.prevProps[key] = this.props[key];
-	this.changed = this.changed || {};
-	this.changed[key] = true;
-}
-
-const UNIQUE_ID = '__uniqCmpID';
-const SUBSCRIBERS = {};
+const UNIQUE_ID = 'UniqueCmpIDn';
+const CONTEXTS = {};
 let ID = 0;
-let CURRENT_ID = 0;
-const getNextId = function() {
-	return ID++;
-}
-
-export const subscribeToStateMaster = (cmp) => {
-	CURRENT_ID = getNextId();
-	SUBSCRIBERS[CURRENT_ID] = cmp;
-	cmp.state = cmp.state || {};
-}
-
-export const unsubscribeFromStateMaster = (cmp) => {
-	const id = cmp.state[UNIQUE_ID];
-	SUBSCRIBERS[id] = null;
-	delete SUBSCRIBERS[id];
-}
 
 class StateMaster {
-	constructor(propsList, initialState = null) {
+	constructor(propsList, initialState, parent) {
 		this.propsList = propsList;
 		this.initialState = initialState;
+		this.parent = typeof parent == 'function' && typeof parent.getDerivedStateFromProps == 'function' ? parent : null;
 	}
 
 	getDerivedState = (props, state, callback) => {
@@ -70,9 +16,9 @@ class StateMaster {
 		this.changed = null;
 		this.id = state[UNIQUE_ID];
 		const isInitial = this.id == null;
-		if (isInitial) {
-			this.id = CURRENT_ID;
-			this.newState = {[UNIQUE_ID]: CURRENT_ID};
+		if (isInitial && !state.initialId) {
+			this.id = ID++;
+			this.newState = {[UNIQUE_ID]: this.id};
 			if (this.initialState instanceof Object) {
 				this.newState = {
 					...this.initialState,
@@ -80,26 +26,21 @@ class StateMaster {
 				};
 			}
 		}
-		const instance = SUBSCRIBERS[this.id];		
-		
-		let parent;
-		if (instance) {
-			parent = instance.__proto__;
-		}
-		check.call(this, this.propsList);
+		this.id = this.id || state.initialId;
+		const instance = CONTEXTS[this.id];
+		this.check(this.propsList);
 		let parentalState;
-		// if (parent instanceof Object) {			
-		// 	parent = parent.constructor.__proto__;
-		// 	if (false) {
-		// 		parentalState = parent.getDerivedStateFromProps(props, state);				
-		// 	}
-		// }
-		if ((isInitial || this.changed || parentalState) && typeof callback == 'function') {
+		if (this.parent) {
+			parentalState = this.parent.getDerivedStateFromProps(props, isInitial ? {initialId: this.id} : state);
+		}
+		const changed = !!this.changed;
+		if (changed || parentalState || isInitial) {
 			const data = {
 				nextProps: props,
 				prevProps: this.prevProps,
 				state,
-				propsList: this.propsList,
+				changed,
+				isInitial,
 				add: this.add,
 				addIfChanged: this.addIfChanged,
 				isChanged: this.isChanged,
@@ -107,16 +48,50 @@ class StateMaster {
 				addIfChangedAny: this.addIfChangedAny,
 				isChangedAll: this.isChangedAll,
 				get: this.get,
-				call: this.call,
-				isInitial
+				call: this.call				
 			}
 			callback.call(instance, data);
 			if (parentalState) {
 				this.merge(parentalState);
 			}
+			if (changed) {
+				if (!this.newState.prevProps) {
+					this.newState.prevProps = this.prevProps;
+				}
+				for (let k in this.changed) {
+					this.newState.prevProps[k] = this.props[k];
+				}
+			}
 			return this.newState;
 		}
 		return null;
+	}
+
+	check = (key) => {
+		if (typeof key == 'string') {
+			const isChanged = this.isPropChanged(key);
+			if (isChanged) {
+				this.savePrevProp(key);
+			}
+			return isChanged;
+		} else if (key instanceof Array) {
+			let isChanged = false;
+			for (let i = 0; i < key.length; i++) {
+				if (this.check(key[i])) {
+					this.savePrevProp(key[i]);
+					isChanged = true
+				}
+			}
+			return isChanged;
+		}
+	}
+	
+	savePrevProp = (key) => {
+		if (!this.newState) {
+			this.newState = {};
+		}
+		this.changed = this.changed || {};
+		this.changed[key] = true;
 	}
 
 	isPropChanged = (key) => {
@@ -189,7 +164,8 @@ class StateMaster {
 			}
 			value = this.props[key];
 		}
-		this.newState = modObject(key, value, this.newState);
+		this.newState = this.newState || {};
+		this.newState[key] = value;
 	}
 
 	merge = (obj) => {
@@ -219,12 +195,24 @@ class StateMaster {
 	}
 }
 
-export const withStateMaster = (component, propsList, initialState) => {
-	if (typeof component.makeDerivedStateFromProps == 'function') {
-		const stateMaster = new StateMaster(propsList, initialState);
-		component.getDerivedStateFromProps = (props, state) => {			
-			return stateMaster.getDerivedState(props, state, component.makeDerivedStateFromProps);
+export const withStateMaster = (component, propsList, initialState = null, parent = null) => {
+	const originalGetDerivedState = component.getDerivedStateFromProps;
+	if (typeof originalGetDerivedState == 'function') {		
+		const stateMaster = new StateMaster(propsList, initialState, parent);
+		component.getDerivedStateFromProps = (props, state) => {
+			return stateMaster.getDerivedState(props, state, originalGetDerivedState);
 		}
 	}
 	return component;
+}
+
+export const registerContext = (context) => {
+	CONTEXTS[ID] = context;
+	context.state = context.state || {};
+}
+
+export const unregisterContext = (context) => {
+	const id = context.state[UNIQUE_ID];
+	CONTEXTS[id] = null;
+	delete CONTEXTS[id];
 }
