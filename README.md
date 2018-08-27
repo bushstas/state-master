@@ -84,7 +84,7 @@ class ContainerComponent extends Component {
         add('allChanged', true);
       }
 
-      // calls "add" method if given prop was changed somehow
+      // calls "add" method if given prop was changed
       addIfChanged('name', value);
       addIfChanged('name');
 
