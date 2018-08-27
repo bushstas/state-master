@@ -36,25 +36,10 @@ class ContainerComponent extends Component {
         isInitial,
         changed,
         isChanged,
-        add,
-
-        // calls "add" method if given prop was changed somehow
-        // addIfChanged('name', value);
-        // addIfChanged('name');
-        addIfChanged,
-
-        // returns true if some prop from the PROPS_LIST was changed
-        // if (isChangedAny()) { ...
-        // returns true if some prop from given arguments (prop names) was changed
-        // if (isChangedAny('width', 'height')) { ...
-        isChangedAny,
-
-        // calls "add" method if some prop from the PROPS_LIST was changed
-        // addIfChangedAny('name', value);
-        // addIfChangedAny('name');
-        addIfChangedAny,
-
-        
+        add,        
+        addIfChanged,        
+        isChangedAny,        
+        addIfChangedAny,        
         isChangedAll,
         call,
         get
@@ -79,10 +64,16 @@ class ContainerComponent extends Component {
 
       // changed is true if one of props from the PROPS_LIST was changed
       if (changed) {
-        const {width, height} = nextProps;
-        add('size', width + 'x' + height);
+        add('somethingChanged', true);
       }
 
+      // returns true if some prop from the PROPS_LIST was changed
+      // the same as "changed"
+      if (isChangedAny()) {
+         add('somethingChanged', true);
+      }
+      
+      // returns true if some prop from given arguments (prop names) was changed
       if (isChangedAny('bgColor', 'fontSize')) {
         const {bgColor, fontSize} = nextProps;
         add('style', {bgColor, fontSize});
@@ -92,10 +83,19 @@ class ContainerComponent extends Component {
       if (isChangedAll()) {
         add('allChanged', true);
       }
+
+      // calls "add" method if given prop was changed somehow
+      addIfChanged('name', value);
+      addIfChanged('name');
+
+      // calls "add" method if some prop from the PROPS_LIST was changed
+      addIfChangedAny('name', value);
+      addIfChangedAny('name');
       
       // returns true if all prop from given arguments (prop names) were changed        
       if (isChangedAll('width', 'height')) {
         const {width, height} = nextProps;
+        add('size', width + 'x' + height);
         
         // calls function with timeout
         // the same as setTimeout(() => this.changeSomething(), 0)
