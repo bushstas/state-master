@@ -54,38 +54,25 @@ class ContainerComponent extends Component {
         // addIfChangedAny('name');
         addIfChangedAny,
 
-        // returns true if all props from the PROPS_LIST were changed
-        // if (isChangedAll()) { ...
-        // returns true if all prop from given arguments (prop names) were changed
-        // if (isChangedAll('width', 'height')) { ...
+        
         isChangedAll,
-
-        // calls function with timeout
-        // the same as setTimeout(() => this.changeSomething(), 0)
-        // use to do some action after component updating
-        // call(() => this.update(nextProps.value));
         call,
-
-        // returns result state or null
-        // it's something about debugging, put to the end
-        // console.log(get())
-        // {width: '200px'}
         get
       } = data;
 
       // the first initial call
       if (isInitial) {
         // adds param "name" with given value to result state
-        // add('name', value);
+        add('name', value);
         // adds param "name" with value from nextProps to result state
-        // add('name');
-        add('someParam', true);
+        add('name');        
       }
 
       // returns true if given prop was changed somehow
-      // if (isChanged('name')) { ...
-      // returns true if given prop was changed to given value
-      // if (isChanged('name', value)) { ...
+      if (isChanged('autoSize')) {
+        add('autoSize');
+      }      
+      // returns true if given prop was changed to given value      
       if (isChanged('autoSize', true)) {
         add('autoSize', true);
       }
@@ -101,13 +88,25 @@ class ContainerComponent extends Component {
         add('style', {bgColor, fontSize});
       }
 
+      // returns true if all props from the PROPS_LIST were changed
+      if (isChangedAll()) {
+        add('allChanged', true);
+      }
+      
+      // returns true if all prop from given arguments (prop names) were changed        
       if (isChangedAll('width', 'height')) {
         const {width, height} = nextProps;
+        
+        // calls function with timeout
+        // the same as setTimeout(() => this.changeSomething(), 0)
+        // use to do some action after component updating
         call(() => {
           this.initNewSizes(width, height);
         });
       }
-
+      
+      // returns result state or null      
+      // it's something about debugging, put to the end
       console.log(get());
   }
 
