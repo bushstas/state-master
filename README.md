@@ -126,6 +126,9 @@ export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_
 if you have some parental component that also has getDerivedStateFromProps add one more argument
 
 ```javascript
+class ContainerComponent extends ParentalComponent {
+  // ...
+}
 export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_STATE, ParentalComponent);
 ```
 
