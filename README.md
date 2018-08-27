@@ -16,7 +16,7 @@ npm install --save state-master
 
 ```javascript
 import {Component} from 'react'
-import {withStateMaster} from 'state-master';
+import {withStateMaster, registerContext, unregisterContext} from 'state-master';
 
 const PROP_LIST = ['width', 'height', 'bgColor', 'fontSize'];
 
@@ -97,6 +97,17 @@ class ContainerComponent extends Component {
         const {bgColor, fontSize} = nextProps;
         add('style', {bgColor, fontSize});
       }
+  }
+
+  constructor(props) {
+    super(props);
+    // use this if you need to have this context in getDerivedStateFromProps
+    registerContext(this);
+  }
+
+  componentWillUnmount() {
+    // this should be done if registerContext was called
+    unregisterContext(this);
   }
 
   render() {
