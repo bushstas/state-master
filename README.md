@@ -89,6 +89,10 @@ class ContainerComponent extends Component {
         get
       } = data;
 
+      if (isInitial) {
+        add('someParam', true);
+      }
+
       if (changed) {
         const {width, height} = nextProps;
         add('size', width + 'x' + height);
@@ -97,6 +101,15 @@ class ContainerComponent extends Component {
         const {bgColor, fontSize} = nextProps;
         add('style', {bgColor, fontSize});
       }
+
+      if (isChangedAll('width', 'height')) {
+         const {width, height} = nextProps;
+        call(() => {
+          this.initNewSizes(width, height);
+        });
+      }
+
+      console.log(get());
   }
 
   constructor(props) {
