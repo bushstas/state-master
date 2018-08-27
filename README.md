@@ -43,42 +43,43 @@ class ContainerComponent extends Component {
         changed,
         
         // adds param "name" with given value to result state
-        // add('name', value)
+        // add('name', value);
         // adds param "name" with value from nextProps to result state
-        // add('name')
+        // add('name');
         add,
 
         // calls "add" method if given prop was changed somehow
-        // addIfChanged('name', value)
-        // addIfChanged('name')
+        // addIfChanged('name', value);
+        // addIfChanged('name');
         addIfChanged,
 
         // returns true if given prop was changed somehow
-        // isChanged('name') 
+        // if (isChanged('name')) { ...
         // returns true if given prop was changed to given value
-        // isChanged('name', value) 
+        // if (isChanged('name', value)) { ...
         isChanged,
 
         // returns true if some prop from the PROPS_LIST was changed
-        // isChangedAny()
+        // if (isChangedAny()) { ...
         // returns true if some prop from given arguments (prop names) was changed
-        // isChangedAny('width', 'height')
+        // if (isChangedAny('width', 'height')) { ...
         isChangedAny,
 
         // calls "add" method if some prop from the PROPS_LIST was changed
-        // addIfChangedAny('name', value)
-        // addIfChangedAny('name')
+        // addIfChangedAny('name', value);
+        // addIfChangedAny('name');
         addIfChangedAny,
 
         // returns true if all props from the PROPS_LIST were changed
-        // isChangedAll()
+        // if (isChangedAll()) { ...
         // returns true if all prop from given arguments (prop names) were changed
-        // isChangedAll('width', 'height')
+        // if (isChangedAll('width', 'height')) { ...
         isChangedAll,
 
         // calls function with timeout
         // the same as setTimeout(() => this.changeSomething(), 0)
         // use to do some action after component updating
+        // call(() => this.update(nextProps.value));
         call,
 
         // returns result state or null
