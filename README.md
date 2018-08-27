@@ -123,6 +123,14 @@ class ContainerComponent extends Component {
 export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_STATE);
 ```
 
+if you have some parental component that also has getDerivedStateFromProps add one more argument
+
+```javascript
+export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_STATE, ParentalComponent);
+```
+
+So the state from ParentalComponent will be added to Container's state and so on
+
 ## License
 
 MIT
