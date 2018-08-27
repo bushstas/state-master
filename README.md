@@ -144,7 +144,3 @@ export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_
 ```
 
 So the state from ParentalComponent will be added to Container's state and so on
-
-## License
-
-MIT
