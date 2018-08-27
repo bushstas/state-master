@@ -18,7 +18,7 @@ npm install --save state-master
 import {Component} from 'react'
 import {withStateMaster, registerContext, unregisterContext} from 'state-master';
 
-const PROP_LIST = ['width', 'height', 'bgColor', 'fontSize'];
+const PROP_LIST = ['width', 'height', 'bgColor', 'fontSize', 'autoSize'];
 
 const INITIAL_STATE = {
   width: 1000,
@@ -33,31 +33,15 @@ class ContainerComponent extends Component {
         nextProps,
         prevProps,
         state,
-
-        // the first initial call
-        // if (isInitial) { ... 
         isInitial,
-
-        // changed is true if one of props from the PROPS_LIST was changed
-        // if (changed) { ... 
         changed,
-        
-        // adds param "name" with given value to result state
-        // add('name', value);
-        // adds param "name" with value from nextProps to result state
-        // add('name');
+        isChanged,
         add,
 
         // calls "add" method if given prop was changed somehow
         // addIfChanged('name', value);
         // addIfChanged('name');
         addIfChanged,
-
-        // returns true if given prop was changed somehow
-        // if (isChanged('name')) { ...
-        // returns true if given prop was changed to given value
-        // if (isChanged('name', value)) { ...
-        isChanged,
 
         // returns true if some prop from the PROPS_LIST was changed
         // if (isChangedAny()) { ...
@@ -89,21 +73,36 @@ class ContainerComponent extends Component {
         get
       } = data;
 
+      // the first initial call
       if (isInitial) {
+        // adds param "name" with given value to result state
+        // add('name', value);
+        // adds param "name" with value from nextProps to result state
+        // add('name');
         add('someParam', true);
       }
 
+      // returns true if given prop was changed somehow
+      // if (isChanged('name')) { ...
+      // returns true if given prop was changed to given value
+      // if (isChanged('name', value)) { ...
+      if (isChanged('autoSize', true)) {
+        add('autoSize', true);
+      }
+
+      // changed is true if one of props from the PROPS_LIST was changed
       if (changed) {
         const {width, height} = nextProps;
         add('size', width + 'x' + height);
       }
+
       if (isChangedAny('bgColor', 'fontSize')) {
         const {bgColor, fontSize} = nextProps;
         add('style', {bgColor, fontSize});
       }
 
       if (isChangedAll('width', 'height')) {
-         const {width, height} = nextProps;
+        const {width, height} = nextProps;
         call(() => {
           this.initNewSizes(width, height);
         });
