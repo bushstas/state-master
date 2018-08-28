@@ -109,7 +109,7 @@ class ContainerComponent extends Component {
       // it's something about debugging, put to the end
       console.log(get());
 
-      // or you can just retun state changes as usually
+      // or you can just return state changes as usually
       return {
         size: nextProps.width + 'x' + nextProps.height
       }

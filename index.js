@@ -50,7 +50,10 @@ class StateMaster {
 				get: this.get,
 				call: this.call				
 			}
-			callback.call(instance, data);
+			const newState = callback.call(instance, data);
+			if (newState) {
+				this.merge(newState);
+			}
 			if (parentalState) {
 				this.merge(parentalState);
 			}
@@ -165,7 +168,7 @@ class StateMaster {
 			value = this.props[key];
 		}
 		this.newState = this.newState || {};
-		this.newState[key] = value;
+		this.addParam(key, value);
 	}
 
 	merge = (obj) => {
@@ -180,9 +183,20 @@ class StateMaster {
 						...this.newState.prevProps
 					}
  				} else {
-					this.newState[k] = obj[k];
+					this.addParam(k, obj[k]);
 				}
 			}
+		}
+	}
+
+	addParam = (key, value) => {
+		if (this.newState[key] instanceof Object && value instanceof Object) {
+			this.newState[key] = {
+				...this.newState[key],
+				...value
+			};
+		} else {
+			this.newState[key] = value;
 		}
 	}
 
