@@ -10,8 +10,5 @@
     "name": "Bushmakin Stas",
     "email": "bushstas@mail.ru"
   },
-  "dependencies": {
-    "react": ">=16.4.0"
-  },
   "keywords": ["react", "getDerivedStateFromProps", "state", "componentDidUpdate"]
 }
