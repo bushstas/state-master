@@ -22,6 +22,7 @@ const PROP_LIST = ['width', 'height', 'bgColor', 'fontSize', 'autoSize'];
 // or if just one prop
 const PROP_LIST = 'value';
 
+// adding initial state is conditional
 const INITIAL_STATE = {
   width: 1000,
   height: 500
