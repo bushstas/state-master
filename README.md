@@ -117,7 +117,7 @@ class ContainerComponent extends Component {
 
   constructor(props) {
     super(props);
-    // use this if you need to have this context in getDerivedStateFromProps
+    // use "registerContext" if you need to have this context in getDerivedStateFromProps
     registerContext(this);
   }
 
@@ -140,7 +140,7 @@ class ContainerComponent extends Component {
   }
 
   componentWillUnmount() {
-    // this should be done if registerContext was called
+    // this should be done if "registerContext" was called
     unregisterContext(this);
   }
 
@@ -157,13 +157,13 @@ class ContainerComponent extends Component {
 export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_STATE);
 ```
 
-if you have some parental component that also has getDerivedStateFromProps add one more argument
+If you have some parental component that also has getDerivedStateFromProps add one more argument
 
 ```javascript
 class ContainerComponent extends ParentalComponent {
   // ...
 }
-export const Container = withStateMaster(ContainerComponent, PROP_LIST, INITIAL_STATE, ParentalComponent);
+export const Container = withStateMaster(ContainerComponent, PROP_LIST, null, ParentalComponent);
 ```
 
 So the state from ParentalComponent will be added to Container's state and so on
