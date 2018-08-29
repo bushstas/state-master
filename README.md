@@ -19,6 +19,8 @@ import {Component} from 'react'
 import {withStateMaster, registerContext, unregisterContext} from 'state-master';
 
 const PROP_LIST = ['width', 'height', 'bgColor', 'fontSize', 'autoSize'];
+// or if just one prop
+const PROP_LIST = 'value';
 
 const INITIAL_STATE = {
   width: 1000,

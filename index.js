@@ -212,16 +212,22 @@ class StateMaster {
 		setTimeout(callback, 0);
 	}
 
-	getComponentDidUpdate = (instance, originalComponentDidUpdate, prevProps, prevState, snapshot) => {
+	getComponentDidUpdate = (instance, originalComponentDidUpdate, prevProps, state, snapshot) => {
 		const data = {
 			prevProps,
-			prevState,
+			state,
+			props: this.props,
 			snapshot,
 			changedProps: this.changedProps,
 			changed: !!this.changed,
+			add: this.add,
+			addIfChanged: this.addIfChanged,
 			isChanged: this.isChanged,
 			isChangedAny: this.isChangedAny,
+			addIfChangedAny: this.addIfChangedAny,
 			isChangedAll: this.isChangedAll,
+			get: this.get,
+			call: this.call
 		}
 		return originalComponentDidUpdate.call(instance, data);
 	}
@@ -233,8 +239,9 @@ export const withStateMaster = (component, propsList, initialState = null, paren
 	const {prototype} = component;
 	const {componentDidUpdate} = prototype;
 	const isDidUpdate = prototype && typeof componentDidUpdate == 'function' && componentDidUpdate.name == 'componentDidUpdate';
+	const validPropsList = propsList && ((propsList instanceof Array && propsList.length > 0) || typeof propsList == 'string');
 	
-	if (isGetDerived || isDidUpdate) {
+	if ((isGetDerived || isDidUpdate) && validPropsList) {
 		const {__proto__: p} = prototype;
 		if (p && p.constructor.getDerivedStateFromProps === originalGetDerivedState) {
 			originalGetDerivedState = () => null;
