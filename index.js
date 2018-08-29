@@ -3,14 +3,14 @@ const CONTEXTS = {};
 let ID = 0;
 
 class StateMaster {
-	constructor(component, propsList, initialState, parent) {
-		this.component = component;
+	constructor(propsList, initialState, parent, callback) {
 		this.propsList = propsList;
 		this.initialState = initialState;
 		this.parent = typeof parent == 'function' && typeof parent.getDerivedStateFromProps == 'function' ? parent : null;
+		this.callback = callback;
 	}
 
-	getDerivedState = (props, state, callback) => {
+	getDerivedState = (props, state) => {
 		this.id = state[UNIQUE_ID];
 		this.prevProps = state.prevProps || {};
 		this.props = props;
@@ -54,14 +54,15 @@ class StateMaster {
 				get: this.get,
 				call: this.call
 			}
-			const newState = callback.call(instance, data);
-			if (newState) {
-				this.merge(newState);
-			}
 			if (parentalState) {
 				this.merge(parentalState);
 			}
+			const newState = this.callback.call(instance, data);
+			if (newState) {
+				this.merge(newState);
+			}			
 			if (changed) {
+				this.newState = this.newState || {};
 				if (!this.newState.prevProps) {
 					this.newState.prevProps = this.prevProps;
 				}
@@ -76,9 +77,11 @@ class StateMaster {
 
 	check = (key) => {
 		if (typeof key == 'string') {
-			const isChanged = this.isPropChanged(key);
+			const isChanged = this.prevProps[key] !== this.props[key];
 			if (isChanged) {
-				this.savePrevProp(key);
+				this.changed = this.changed || {};
+				this.changed[key] = true;
+				this.changedProps.push(key);
 			}
 			return isChanged;
 		} else if (key instanceof Array) {
@@ -90,19 +93,6 @@ class StateMaster {
 			}
 			return isChanged;
 		}
-	}
-	
-	savePrevProp = (key) => {
-		if (!this.newState) {
-			this.newState = {};
-		}
-		this.changed = this.changed || {};
-		this.changed[key] = true;
-		this.changedProps.push(key);
-	}
-
-	isPropChanged = (key) => {
-		return this.prevProps[key] !== this.props[key];
 	}
 
 	isChanged = (key, value = undefined) => {
@@ -246,10 +236,10 @@ export const withStateMaster = (component, propsList, initialState = null, paren
 		if (p && p.constructor.getDerivedStateFromProps === originalGetDerivedState) {
 			originalGetDerivedState = () => null;
 		}
-		const stateMaster = new StateMaster(component, propsList, initialState, parent);		
+		const stateMaster = new StateMaster(propsList, initialState, parent, originalGetDerivedState);		
 		if (isGetDerived) {
 			component.getDerivedStateFromProps = (props, state) => {
-				return stateMaster.getDerivedState(props, state || {}, originalGetDerivedState);
+				return stateMaster.getDerivedState(props, state || {});
 			}
 		}
 		if (isDidUpdate) {
