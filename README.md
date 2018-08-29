@@ -1,6 +1,6 @@
 # state-master [![npm](https://img.shields.io/npm/v/state-master.svg?style=flat-square)](https://www.npmjs.com/package/state-master)
 
-StateMaster improves react static method getDerivedStateFromProps
+StateMaster improves React's methods getDerivedStateFromProps and componentDidUpdate
 
 
 ## Installation
@@ -119,6 +119,24 @@ class ContainerComponent extends Component {
     super(props);
     // use this if you need to have this context in getDerivedStateFromProps
     registerContext(this);
+  }
+
+  componentDidUpdate(data) {
+    const {
+        prevProps,
+        prevState,
+        snapshot,
+        changedProps,
+        changed,
+        isChanged,
+        isChangedAny,
+        isChangedAll
+      } = data;
+
+      if (isChanged('value')) {
+        const {value} = this.props;
+        this.doSomeAction(value);
+      }
   }
 
   componentWillUnmount() {

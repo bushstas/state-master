@@ -3,18 +3,20 @@ const CONTEXTS = {};
 let ID = 0;
 
 class StateMaster {
-	constructor(propsList, initialState, parent) {
+	constructor(component, propsList, initialState, parent) {
+		this.component = component;
 		this.propsList = propsList;
 		this.initialState = initialState;
 		this.parent = typeof parent == 'function' && typeof parent.getDerivedStateFromProps == 'function' ? parent : null;
 	}
 
 	getDerivedState = (props, state, callback) => {
+		this.id = state[UNIQUE_ID];
 		this.prevProps = state.prevProps || {};
 		this.props = props;
 		this.newState = null;
 		this.changed = null;
-		this.id = state[UNIQUE_ID];
+		this.changedProps = [];
 		const isInitial = this.id == null;
 		if (isInitial && !state.initialId) {
 			this.id = ID++;
@@ -31,7 +33,8 @@ class StateMaster {
 		this.check(this.propsList);
 		let parentalState;
 		if (this.parent) {
-			parentalState = this.parent.getDerivedStateFromProps(props, isInitial ? {initialId: this.id} : state);
+			const s = isInitial ? {initialId: this.id} : state;
+			parentalState = this.parent.getDerivedStateFromProps(props, s);
 		}
 		const changed = !!this.changed;
 		if (changed || parentalState || isInitial) {
@@ -40,6 +43,7 @@ class StateMaster {
 				prevProps: this.prevProps,
 				state,
 				changed,
+				changedProps: this.changedProps,
 				isInitial,
 				add: this.add,
 				addIfChanged: this.addIfChanged,
@@ -48,7 +52,7 @@ class StateMaster {
 				addIfChangedAny: this.addIfChangedAny,
 				isChangedAll: this.isChangedAll,
 				get: this.get,
-				call: this.call				
+				call: this.call
 			}
 			const newState = callback.call(instance, data);
 			if (newState) {
@@ -81,7 +85,6 @@ class StateMaster {
 			let isChanged = false;
 			for (let i = 0; i < key.length; i++) {
 				if (this.check(key[i])) {
-					this.savePrevProp(key[i]);
 					isChanged = true
 				}
 			}
@@ -95,6 +98,7 @@ class StateMaster {
 		}
 		this.changed = this.changed || {};
 		this.changed[key] = true;
+		this.changedProps.push(key);
 	}
 
 	isPropChanged = (key) => {
@@ -207,14 +211,45 @@ class StateMaster {
 	call = (callback) => {
 		setTimeout(callback, 0);
 	}
+
+	getComponentDidUpdate = (instance, originalComponentDidUpdate, prevProps, prevState, snapshot) => {
+		const data = {
+			prevProps,
+			prevState,
+			snapshot,
+			changedProps: this.changedProps,
+			changed: !!this.changed,
+			isChanged: this.isChanged,
+			isChangedAny: this.isChangedAny,
+			isChangedAll: this.isChangedAll,
+		}
+		return originalComponentDidUpdate.call(instance, data);
+	}
 }
 
 export const withStateMaster = (component, propsList, initialState = null, parent = null) => {
-	const originalGetDerivedState = component.getDerivedStateFromProps;
-	if (typeof originalGetDerivedState == 'function') {		
-		const stateMaster = new StateMaster(propsList, initialState, parent);
-		component.getDerivedStateFromProps = (props, state) => {
-			return stateMaster.getDerivedState(props, state, originalGetDerivedState);
+	let originalGetDerivedState = component.getDerivedStateFromProps;
+	const isGetDerived = typeof originalGetDerivedState == 'function';
+	const {prototype} = component;
+	const {componentDidUpdate} = prototype;
+	const isDidUpdate = prototype && typeof componentDidUpdate == 'function' && componentDidUpdate.name == 'componentDidUpdate';
+	
+	if (isGetDerived || isDidUpdate) {
+		const {__proto__: p} = prototype;
+		if (p && p.constructor.getDerivedStateFromProps === originalGetDerivedState) {
+			originalGetDerivedState = () => null;
+		}
+		const stateMaster = new StateMaster(component, propsList, initialState, parent);		
+		if (isGetDerived) {
+			component.getDerivedStateFromProps = (props, state) => {
+				return stateMaster.getDerivedState(props, state || {}, originalGetDerivedState);
+			}
+		}
+		if (isDidUpdate) {
+			const originalComponentDidUpdate = componentDidUpdate;
+			component.prototype.componentDidUpdate = function(prevProps, prevState, snapshot) {
+				stateMaster.getComponentDidUpdate(this, originalComponentDidUpdate, prevProps, prevState, snapshot);
+			}
 		}
 	}
 	return component;
