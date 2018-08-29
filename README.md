@@ -38,6 +38,7 @@ class ContainerComponent extends Component {
         state,
         isInitial,
         changed,
+        changedProps,
         isChanged,
         add,
         addIfChanged,
@@ -54,6 +55,11 @@ class ContainerComponent extends Component {
         add('name', value);
         // adds param "name" with value from nextProps to result state
         add('name');        
+      }
+
+      // changedProps is an array which contains all changed prop names
+      if (changedProps.indexOf('value') !== -1) {
+        add('value'); 
       }
 
       // returns true if given prop was changed somehow
@@ -79,7 +85,7 @@ class ContainerComponent extends Component {
       // returns true if some prop from given arguments (prop names) was changed
       if (isChangedAny('bgColor', 'fontSize')) {
         const {bgColor, fontSize} = nextProps;
-        add('style', {bgColor, fontSize});
+        add('style', {backgroundColor: bgColor, fontSize});
       }
 
       // returns true if all props from the PROPS_LIST were changed
