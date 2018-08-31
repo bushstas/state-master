@@ -96,7 +96,7 @@ class StateMaster {
 	}
 
 	isChanged = (key, value = undefined) => {
-		return this.changed && this.changed[key] && (value === undefined || this.newState.prevProps[key] === value);
+		return this.changed && this.changed[key] && (value === undefined || (this.newState && this.newState.prevProps[key] === value));
 	}
 
 	addIfChangedAny = (key, value = undefined) => {
