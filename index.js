@@ -223,24 +223,26 @@ class StateMaster {
 	}
 }
 
+const nullFunc = () => null;
+
 export const withStateMaster = (component, propsList, initialState = null, parent = null) => {
 	let originalGetDerivedState = component.getDerivedStateFromProps;
-	const isGetDerived = typeof originalGetDerivedState == 'function';
 	const {prototype} = component;
 	const {componentDidUpdate} = prototype;
 	const isDidUpdate = prototype && typeof componentDidUpdate == 'function' && componentDidUpdate.name == 'componentDidUpdate';
 	const validPropsList = propsList && ((propsList instanceof Array && propsList.length > 0) || typeof propsList == 'string');
 	
-	if ((isGetDerived || isDidUpdate) && validPropsList) {
+	if (validPropsList) {
 		const {__proto__: p} = prototype;
 		if (p && p.constructor.getDerivedStateFromProps === originalGetDerivedState) {
-			originalGetDerivedState = () => null;
+			originalGetDerivedState = nullFunc;
 		}
 		const stateMaster = new StateMaster(propsList, initialState, parent, originalGetDerivedState);		
-		if (isGetDerived) {
-			component.getDerivedStateFromProps = (props, state) => {
-				return stateMaster.getDerivedState(props, state || {});
-			}
+		if (typeof originalGetDerivedState != 'function') {
+			originalGetDerivedState = nullFunc;
+		}
+		component.getDerivedStateFromProps = (props, state) => {
+			return stateMaster.getDerivedState(props, state || {});
 		}
 		if (isDidUpdate) {
 			const originalComponentDidUpdate = componentDidUpdate;
