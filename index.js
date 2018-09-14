@@ -61,7 +61,7 @@ class StateMaster {
 			if (newState) {
 				this.merge(newState);
 			}			
-			if (changed) {
+			if (changed) {				
 				this.newState = this.newState || {};
 				if (!this.newState.prevProps) {
 					this.newState.prevProps = this.prevProps;
@@ -201,26 +201,6 @@ class StateMaster {
 	call = (callback) => {
 		setTimeout(callback, 0);
 	}
-
-	getComponentDidUpdate = (instance, originalComponentDidUpdate, prevProps, state, snapshot) => {
-		const data = {
-			prevProps,
-			state,
-			props: this.props,
-			snapshot,
-			changedProps: this.changedProps,
-			changed: !!this.changed,
-			add: this.add,
-			addIfChanged: this.addIfChanged,
-			isChanged: this.isChanged,
-			isChangedAny: this.isChangedAny,
-			addIfChangedAny: this.addIfChangedAny,
-			isChangedAll: this.isChangedAll,
-			get: this.get,
-			call: this.call
-		}
-		return originalComponentDidUpdate.call(instance, data);
-	}
 }
 
 const nullFunc = () => null;
@@ -228,8 +208,6 @@ const nullFunc = () => null;
 export const withStateMaster = (component, propsList, initialState = null, parent = null) => {
 	let originalGetDerivedState = component.getDerivedStateFromProps;
 	const {prototype} = component;
-	const {componentDidUpdate} = prototype;
-	const isDidUpdate = prototype && typeof componentDidUpdate == 'function' && componentDidUpdate.name == 'componentDidUpdate';
 	const validPropsList = propsList && ((propsList instanceof Array && propsList.length > 0) || typeof propsList == 'string');
 	
 	if (validPropsList) {
@@ -243,12 +221,6 @@ export const withStateMaster = (component, propsList, initialState = null, paren
 		}
 		component.getDerivedStateFromProps = (props, state) => {
 			return stateMaster.getDerivedState(props, state || {});
-		}
-		if (isDidUpdate) {
-			const originalComponentDidUpdate = componentDidUpdate;
-			component.prototype.componentDidUpdate = function(prevProps, prevState, snapshot) {
-				stateMaster.getComponentDidUpdate(this, originalComponentDidUpdate, prevProps, prevState, snapshot);
-			}
 		}
 	}
 	return component;

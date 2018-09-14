@@ -1,6 +1,6 @@
 {
   "name": "state-master",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "State master",
   "repository": {
     "type": "git",
@@ -10,5 +10,5 @@
     "name": "Bushmakin Stas",
     "email": "bushstas@mail.ru"
   },
-  "keywords": ["react", "getDerivedStateFromProps", "state", "componentDidUpdate"]
+  "keywords": ["react", "getDerivedStateFromProps", "state"]
 }
